@@ -1,0 +1,7 @@
+project(drwnIO)
+set (SRC_LIST "")
+find_package(ZLIB)
+aux_source_directory(. SRC_LIST)
+include_directories(${ZLIB_INCLUDE_DIRS})
+add_library(${PROJECT_NAME} ${SRC_LIST})
+#target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES} drwnBase)

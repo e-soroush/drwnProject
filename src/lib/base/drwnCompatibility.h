@@ -54,10 +54,10 @@ typedef unsigned __int32 uint32_t;
 #endif
 
 // Linux
-#if defined(__LINUX__)
+#if defined(__LINUX)
 #define DRWN_DIRSEP '/'
 #endif
-
+#define DRWN_DIRSEP '/'
 // Mac OS X
 #if defined(__APPLE__)
 #define DRWN_DIRSEP '/'

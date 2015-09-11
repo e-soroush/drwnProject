@@ -12,9 +12,13 @@
 
 #pragma once
 
+#include <cstdlib>
+#include <iomanip>
 #include <vector>
 
 #include "cv.h"
+#include "drwnBase.h"
+
 
 // drwnColourHistogram ------------------------------------------------------
 

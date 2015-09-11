@@ -28,6 +28,15 @@ class drwnMaxFlow;
 //! Residual capacities are updated in-place. See \ref drwnMaxFlowDoc. Negative
 //! edge weights are allowed between terminals (source or target) and added to
 //! the constant. Supports dynamic graph-cuts (see Kohli and Torr, PAMI 2007).
+//!
+// drwnMaxFlow and drwnBKMaxFlow statics ------------------------------------
+
+//#ifdef __APPLE__
+//const unsigned char drwnMaxFlow::FREE;
+//const unsigned char drwnMaxFlow::SOURCE;
+//const unsigned char drwnMaxFlow::TARGET;
+//const int drwnBKMaxFlow::TERMINAL;
+//#endif
 
 class drwnMaxFlow {
  protected:

@@ -141,7 +141,7 @@ bool drwnNNGraphNode::write(ostream& os) const
 // drwnNNGraphImageData ------------------------------------------------------
 
 string drwnNNGraphImageData::imgDir("data/images");
-string drwnNNGraphImageData::imgExt(".jpg");
+string drwnNNGraphImageData::imgExt(".bmp");
 string drwnNNGraphImageData::lblDir("data/labels");
 string drwnNNGraphImageData::lblExt(".txt");
 string drwnNNGraphImageData::segDir("data/regions");

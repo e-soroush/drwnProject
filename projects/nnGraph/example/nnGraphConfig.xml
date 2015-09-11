@@ -8,8 +8,8 @@
     <option name="enrichmentMove" value="true" />
     <option name="randExhaustive" value="1" />
 
-    <option name="imgDir" value="data/images/" />
-    <option name="lblDir" value="data/labels/" />
-    <option name="segDir" value="data/regions/" />
+    <option name="imgDir" value="/home/ebi/Datasets/MSRC/Images" />
+    <option name="lblDir" value="/home/ebi/Datasets/MSRC/labels" />
+    <option name="segDir" value="/home/ebi/Datasets/MSRC/regions" />
   </drwnNNGraph>
 </drwn>

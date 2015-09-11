@@ -1,0 +1,6 @@
+project(drwnLibs)
+add_subdirectory(base ${CMAKE_BINARY_DIR}/base)
+add_subdirectory(io ${CMAKE_BINARY_DIR}/io)
+add_subdirectory(ml ${CMAKE_BINARY_DIR}/ml)
+add_subdirectory(pgm ${CMAKE_BINARY_DIR}/pgm)
+add_subdirectory(vision ${CMAKE_BINARY_DIR}/vision)

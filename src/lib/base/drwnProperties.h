@@ -20,7 +20,6 @@
 #include <list>
 
 #include "Eigen/Core"
-
 #include "drwnSmartPointer.h"
 #include "drwnXMLParser.h"
 
