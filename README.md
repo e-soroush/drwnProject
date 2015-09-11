@@ -1,8 +1,8 @@
 # Image segmentation for Holistic scene understanding
-Ebrahim Soroush
-e.soroush@hotmail.com
-M.Sc Stuednt at Amirkabir Univeristy of Technology
-September 2015
+>Ebrahim Soroush
+>e.soroush@hotmail.com
+>M.Sc Stuednt at Amirkabir Univeristy of Technology
+>September 2015
 - - -
 
 
