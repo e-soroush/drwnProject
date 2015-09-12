@@ -1,9 +1,9 @@
 <drwn>
   <drwnMultiSegConfig>
     <!-- data options -->
-    <option name="baseDir" value="/home/ebi/Datasets/" />
-    <option name="imgDir" value="MSRC/Images/" />
-    <option name="lblDir" value="MSRC/GroundTruth/" />
+    <option name="baseDir" value="/home/ebi/Datasets/MSRC/" />
+    <option name="imgDir" value="Images/" />
+    <option name="lblDir" value="labels/" />
     <option name="cacheDir" value="cached/" />
     <option name="modelsDir" value="models/" />
     <option name="outputDir" value="output/" />

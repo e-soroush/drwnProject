@@ -82,8 +82,8 @@ void SuperPixelContainer::gTruthSuperPixel(vector<vector<int> > &segIds, const M
     for(unsigned cnt = 0; cnt<_maps.size()-1; cnt++){
         double numSegs;double tmp1;Point p;
         minMaxLoc( _maps[cnt], &tmp1, &numSegs, &p, &p);
-        segIds[cnt].resize(numSegs);
-        for(unsigned seg = 0; seg<numSegs; seg++){
+        segIds[cnt].resize(numSegs+1);
+        for(unsigned seg = 0; seg<numSegs+1; seg++){
             vector<int> tmp;
             for(unsigned row = 0; row<map.rows; row++){
                 const int *ps = _maps[cnt].ptr<int>(row);

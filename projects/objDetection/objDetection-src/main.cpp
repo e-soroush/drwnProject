@@ -1,8 +1,10 @@
 #include "drwnVision.h"
+#include "drwnBase.h"
 #include "opencv2/opencv.hpp"
 #include "SuperPixelContainer.h"
 #include "FeaturesContainer.h"
 #include "HOGFeatures.h"
+#include "UnarySegmentation.h"
 
 string datasets_path = std::getenv("DATASETS_DIR");
 //    string datasets_path = "/home/ebi/Datasets";
@@ -67,8 +69,8 @@ void testSPWithClassifier(){
     vector<Mat> maps;
     gtContainer.getMap(maps);
     container.addSuperpixels(maps[0]);
-//    imshow("hh",container.visualize(img, false));
-//    waitKey();
+    //    imshow("hh",container.visualize(img, false));
+    //    waitKey();
     string lblFilename = (string)getenv("DATASETS_DIR")+"/MSRC/labels/1_19_s.txt";
     MatrixXi labels(img.rows, img.cols);
     int nLabels = 21;
@@ -125,11 +127,243 @@ void testSPWithClassifier(){
 }
 
 
+
+void makeDataset(){
+    const string filename = "../objDetection-src/MSRC_example/MSRCConf.xml";
+    drwnXMLDoc confXml;
+    drwnXMLNode *node = drwnParseXMLFile(confXml, filename.c_str());
+    drwnXMLNode *addressNode = node->first_node("Addressing_informations");
+    string imageDir, labelDir, imgExt, lblExt, baseDir, outputDir;
+    int numClass;
+    for (drwnXMLNode *it = addressNode->first_node("option"); it != NULL; it = it->next_sibling("option")) {
+        drwnXMLAttr *name = it->first_attribute("name");
+        drwnXMLAttr *value = it->first_attribute("value");
+        DRWN_ASSERT((name != NULL) && (value != NULL));
+        if(string(name->value()).compare("imageDir")==0)
+            imageDir.assign(value->value());
+        else if(string(name->value()).compare("baseDir")==0)
+            baseDir.assign(value->value());
+        else if(string(name->value()).compare("labelDir")==0)
+            labelDir.assign(value->value());
+        else if(string(name->value()).compare("outputDir")==0)
+            outputDir.assign(value->value());
+        else if(string(name->value()).compare("imgExt")==0)
+            imgExt.assign(value->value());
+        else if(string(name->value()).compare("lblExt")==0)
+            lblExt.assign(value->value());
+    }
+    drwnXMLNode *numClassNode = node->first_node("numClass");
+    numClass = atoi(numClassNode->value());
+    drwnXMLNode *trainInfo = node->first_node("Train_Information");
+    string trainList, testList, trainValList, baseDirT;
+    for (drwnXMLNode *it = trainInfo->first_node("option"); it != NULL; it = it->next_sibling("option")) {
+        drwnXMLAttr *name = it->first_attribute("name");
+        drwnXMLAttr *value = it->first_attribute("value");
+        DRWN_ASSERT((name != NULL) && (value != NULL));
+        if(string(name->value()).compare("baseDir")==0)
+            baseDirT.assign(value->value());
+        else if(string(name->value()).compare("trainList")==0)
+            trainList.assign(value->value());
+        else if(string(name->value()).compare("trainValList")==0)
+            trainValList.assign(value->value());
+        else if(string(name->value()).compare("testList")==0)
+            testList.assign(value->value());
+    }
+    const string tmp = string(baseDirT+trainList);
+    const char * imageList = tmp.c_str();
+    vector<string> baseNames;
+    if (drwnFileExists(imageList)) {
+        DRWN_LOG_MESSAGE("Reading image list from " << imageList << "...");
+        baseNames = drwnReadFile(imageList);
+        DRWN_LOG_MESSAGE("...read " << baseNames.size() << " images");
+    } else {
+        DRWN_LOG_MESSAGE("Processing single image " << imageList << "...");
+        baseNames.push_back(string(imageList));
+    }
+    DRWN_LOG_MESSAGE("Prepairing Train data ...");
+    drwnClassifierDataset dataset;
+    float processed = 0;
+    for (unsigned cnt = 0; cnt<baseNames.size(); cnt++){
+        string lblFilename = (baseDir + labelDir + baseNames[cnt]+lblExt);
+        string imgFilename = baseDir + imageDir + baseNames[cnt] + imgExt;
+        cv::Mat img = imread(imgFilename);
+        SuperPixelContainer container;
+        container.addSuperpixels(drwnFastSuperpixels(img, 15));
+        vector<int> rTarget;
+        HOGFeatures hogFeat;
+        vector<vector<double> > features;
+        hogFeat.computeFeatures(img, features, container);
+        int noSps = container.size();
+        container.loadSuperpixels(lblFilename.c_str());
+        MatrixXi labels(img.rows, img.cols);
+        drwnLoadPixelLabels(labels, lblFilename.c_str(), numClass);
+        vector<vector<int> > segIds;
+        container.gTruthSuperPixel(segIds, labels);
+        vector<int> targets = segIds[0];
+        vector<vector<double> > featureVector;
+        for (unsigned cnt1 = 0; cnt1<features.size(); cnt1++){
+            if(targets[cnt1]<0) continue;
+            if(targets[cnt1]>20)
+                cout<<"why??"<<endl;
+            featureVector.push_back(features[cnt1]);
+            rTarget.push_back(targets[cnt1]);
+        }
+        for (unsigned cnt1 = 0; cnt1<rTarget.size(); cnt1++)
+            dataset.append(featureVector[cnt1],rTarget[cnt1]);
+        if((cnt % (int)(baseNames.size()/10))==0 ){
+            DRWN_LOG_MESSAGE(processed*10<<" percent completed ...");
+            processed++;
+        }
+
+    }
+    dataset.write((baseDirT+string("SPHOGFeatureDataset.bin")).c_str());
+    int nFeatures = dataset.numFeatures();
+    int nClasses = dataset.maxTarget() + 1;
+    drwnBoostedClassifier model(nFeatures, nClasses);
+    model.train(dataset);
+    model.write((baseDirT+string("SPHOGFeatureModel.xml")).c_str());
+}
+void trainModel(){
+    drwnClassifierDataset dataset;
+    string base_dir = "/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/";
+    string dataset_dir = base_dir+"SPHOGFeatureDataset.bin";
+    string model_dir = base_dir + "SPHOGFeatureModel.xml";
+    dataset.read(dataset_dir.c_str());
+    int nFeatures = dataset.numFeatures();
+    int nClasses = dataset.maxTarget() + 1;
+    drwnBoostedClassifier model(nFeatures, nClasses);
+    model.train(dataset);
+    model.write((model_dir).c_str());
+}
+void testModel(){
+    const string filename = "../objDetection-src/MSRC_example/MSRCConf.xml";
+    drwnXMLDoc confXml;
+    drwnXMLNode *node = drwnParseXMLFile(confXml, filename.c_str());
+    drwnXMLNode *addressNode = node->first_node("Addressing_informations");
+    string imageDir, labelDir, imgExt, lblExt, baseDir, outputDir;
+    int numClass;
+    for (drwnXMLNode *it = addressNode->first_node("option"); it != NULL; it = it->next_sibling("option")) {
+        drwnXMLAttr *name = it->first_attribute("name");
+        drwnXMLAttr *value = it->first_attribute("value");
+        DRWN_ASSERT((name != NULL) && (value != NULL));
+        if(string(name->value()).compare("imageDir")==0)
+            imageDir.assign(value->value());
+        else if(string(name->value()).compare("baseDir")==0)
+            baseDir.assign(value->value());
+        else if(string(name->value()).compare("labelDir")==0)
+            labelDir.assign(value->value());
+        else if(string(name->value()).compare("outputDir")==0)
+            outputDir.assign(value->value());
+        else if(string(name->value()).compare("imgExt")==0)
+            imgExt.assign(value->value());
+        else if(string(name->value()).compare("lblExt")==0)
+            lblExt.assign(value->value());
+    }
+    drwnXMLNode *numClassNode = node->first_node("numClass");
+    numClass = atoi(numClassNode->value());
+    drwnXMLNode *trainInfo = node->first_node("Train_Information");
+    string trainList, testList, trainValList, baseDirT;
+    for (drwnXMLNode *it = trainInfo->first_node("option"); it != NULL; it = it->next_sibling("option")) {
+        drwnXMLAttr *name = it->first_attribute("name");
+        drwnXMLAttr *value = it->first_attribute("value");
+        DRWN_ASSERT((name != NULL) && (value != NULL));
+        if(string(name->value()).compare("baseDir")==0)
+            baseDirT.assign(value->value());
+        else if(string(name->value()).compare("trainList")==0)
+            trainList.assign(value->value());
+        else if(string(name->value()).compare("trainValList")==0)
+            trainValList.assign(value->value());
+        else if(string(name->value()).compare("testList")==0)
+            testList.assign(value->value());
+    }
+    const string tmp = string(baseDirT+testList);
+    const char * imageList = tmp.c_str();
+    vector<string> baseNames;
+    if (drwnFileExists(imageList)) {
+        DRWN_LOG_MESSAGE("Reading image list from " << imageList << "...");
+        baseNames = drwnReadFile(imageList);
+        DRWN_LOG_MESSAGE("...read " << baseNames.size() << " images");
+    } else {
+        DRWN_LOG_MESSAGE("Processing single image " << imageList << "...");
+        baseNames.push_back(string(imageList));
+    }
+    DRWN_LOG_MESSAGE("Prepairing Train data ...");
+    drwnClassifierDataset dataset;
+    float processed = 0;
+    for (unsigned cnt = 0; cnt<baseNames.size(); cnt++){
+        string lblFilename = (baseDir + labelDir + baseNames[cnt]+lblExt);
+        string imgFilename = baseDir + imageDir + baseNames[cnt] + imgExt;
+        cv::Mat img = imread(imgFilename);
+        SuperPixelContainer container;
+        container.addSuperpixels(drwnFastSuperpixels(img, 15));
+        vector<int> rTarget;
+        HOGFeatures hogFeat;
+        vector<vector<double> > features;
+        hogFeat.computeFeatures(img, features, container);
+        int noSps = container.size();
+        container.loadSuperpixels(lblFilename.c_str());
+        MatrixXi labels(img.rows, img.cols);
+        drwnLoadPixelLabels(labels, lblFilename.c_str(), numClass);
+        vector<vector<int> > segIds;
+        container.gTruthSuperPixel(segIds, labels);
+        vector<int> targets = segIds[0];
+        vector<vector<double> > featureVector;
+        for (unsigned cnt1 = 0; cnt1<targets.size(); cnt1++)
+            dataset.append(features[cnt1],targets[cnt1]);
+        if((cnt % (int)(baseNames.size()/10))==0 ){
+            DRWN_LOG_MESSAGE(processed*10<<" percent completed ...");
+            processed++;
+        }
+
+    }
+    dataset.write((baseDirT+string("SPHOGFeatureTest.bin")).c_str());
+    int nFeatures = dataset.numFeatures();
+    int nClasses = dataset.maxTarget() + 1;
+    drwnBoostedClassifier model;
+    string model_dir = (baseDirT)+string("SPHOGFeatureModel.xml");
+    model.read(model_dir.c_str());
+    vector<int> predictions;
+    model.getClassifications(dataset.features, predictions);
+    double acc = 0;
+    for(unsigned cnt = 0; cnt<predictions.size(); cnt++){
+        if(predictions[cnt]==dataset.targets[cnt]) acc++;
+    }
+    cout<<"accuracy is: "<<acc/predictions.size()<<endl;
+}
+
+void testEModel(){
+    drwnClassifierDataset dataset;
+    drwnBoostedClassifier model;
+    string base_dir = "/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/";
+    string dataset_dir = base_dir+"SPHOGFeatureTest.bin";
+    string model_dir = base_dir + "SPHOGFeatureModel.xml";
+    dataset.read(dataset_dir.c_str());
+    model.read(model_dir.c_str());
+    vector<int> predictions;
+    model.getClassifications(dataset.features, predictions);
+    double acc = 0;
+    double total = 0;
+    for(unsigned cnt = 0; cnt<predictions.size(); cnt++){
+        if(dataset.targets[cnt]<0) continue;
+        if(predictions[cnt]==dataset.targets[cnt]) acc++;
+        total++;
+    }
+    cout<<"accuracy is: "<<acc/total<<endl;
+}
+
+
 int main(int argc, char * argv[]){
-//    testHOG();
-//    testDataset();
-//    testClassifier();
-    testSPWithClassifier();
+    //    testHOG();
+    //    testDataset();
+    //    testClassifier();
+    //    testSPWithClassifier();
+    //    configDataset();
+    //    makeDataset();
+    //    trainModel();
+    //    testModel();
+//    testEModel();
+    UnarySegmentation unary;
+    unary.Process();
     vector<cv::Mat> selected,response, textoneFeatures;
     vector<vector<double> >features;
     SuperPixelContainer container;
@@ -139,17 +373,23 @@ int main(int argc, char * argv[]){
     FeaturesContainer featureContainer;
     textoneFilter.filter(img,textoneFeatures);
     container.addSuperpixels(drwnFastSuperpixels(img, 15));
+    vector<int> tSize;
+    for(int cnt = 0; cnt<container.size(); cnt++){
+        set<unsigned> nbrs = container.neighbours(cnt);
+        tSize.push_back(nbrs.size());
+    }
+    int maxTSize = *min_element(tSize.begin(), tSize.end());
     HOGFeatures hogFeat;
     hogFeat.computeFeatures(img, features, container);
     gtContainer.loadSuperpixels("/home/ebi/Datasets/MSRC/labels/1_19_s.txt");
     cv::imshow("gt",gtContainer.visualize(img,false));
     waitKey();
-//    cv::imshow("test", container.selectSuperPixel(20,img, selected));
-//    container.setMap(selected);
+    //    cv::imshow("test", container.selectSuperPixel(20,img, selected));
+    //    container.setMap(selected);
     lbpFiltBank.filter(img, response);
     lbpFiltBank.regionFeatures(container, response, features);
     featureContainer.setFeatures(textoneFeatures, container);
-//    featureContainer.appendFeatures(textoneFeatures, selected[0]);
+    //    featureContainer.appendFeatures(textoneFeatures, selected[0]);
     cv::imshow("test2",container.visualize(img,false));
     Mat summ = (gtContainer.visualize(Mat(img.size(), img.type(),Scalar::all(0)),false,true) + container.visualize(img,false));
     imshow("sum", summ);
