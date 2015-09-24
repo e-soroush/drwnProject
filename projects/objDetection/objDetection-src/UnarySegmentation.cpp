@@ -15,11 +15,11 @@ void UnarySegmentation::Process(){
     if(!drwnFileExists(_configAddress.c_str()))
         initConfigXml();
     readConfig();
-    if(!drwnFileExists((_baseWorkDir+"unary"+_featureName+"TrainDataset.bin").c_str()))
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TrainDataset.bin").c_str()))
         makeTrainDataset();
-    if(!drwnFileExists((_baseWorkDir+"unary"+_featureName+"TestDataset.bin").c_str()))
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TestDataset.bin").c_str()))
         makeTestDataset();
-    if(!drwnFileExists((_baseWorkDir+"unary"+_featureName+"TrainedModel.bin").c_str()))
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TrainedModel.bin").c_str()))
         trainModel();
     testModel();
 }
@@ -37,7 +37,7 @@ void UnarySegmentation::initConfigXml(){
     drwnAddXMLAttribute(*node, "value", "Images/");
     node = drwnAddXMLChildNode(*addressInfo, "option");
     drwnAddXMLAttribute(*node,"name", "labelDir");
-    drwnAddXMLAttribute(*node, "value", "labels/");
+    drwnAddXMLAttribute(*node, "value", "Labels/");
     node = drwnAddXMLChildNode(*addressInfo, "option");
     drwnAddXMLAttribute(*node,"name", "groundTruthDir");
     drwnAddXMLAttribute(*node, "value", "GroundTruth/");
@@ -158,12 +158,15 @@ void UnarySegmentation::initConfigXml(){
     drwnAddXMLAttribute(*node, "value", "testList.txt");
     node = drwnAddXMLChildNode(*trainImages, "option");
     drwnAddXMLAttribute(*node, "name", "superPixelAddress");
-    drwnAddXMLAttribute(*node, "value", "/home/ebi/Datasets/MSRC/regions/");
+    drwnAddXMLAttribute(*node, "value", "/home/ebi/Datasets/MSRC/Regions/");
+    node = drwnAddXMLChildNode(*trainImages, "option");
+    drwnAddXMLAttribute(*node, "name", "superPixelExt");
+    drwnAddXMLAttribute(*node, "value", ".spx");
     node = drwnAddXMLChildNode(*trainImages, "option");
     drwnAddXMLAttribute(*node, "name", "usePreSuperPixels");
     drwnAddXMLAttribute(*node, "value", "0");
     node = drwnAddXMLChildNode(*trainImages, "option");
-    drwnAddXMLAttribute(*node, "name", "featureName");
+    drwnAddXMLAttribute(*node, "name", "methodName");
     drwnAddXMLAttribute(*node, "value", "HOG");
     node = drwnAddXMLChildNode(*trainImages, "option");
     drwnAddXMLAttribute(*node, "name", "gridSizeSuperPixel");
@@ -199,6 +202,8 @@ void UnarySegmentation::readConfig(){
             _imgExt.assign(value->value());
         else if(string(name->value()).compare("lblExt")==0)
             _lblExt.assign(value->value());
+        else if(string(name->value()).compare("superPixelExt")==0)
+            _spExt.assign(value->value());
     }
     drwnXMLNode *numClassNode = node->first_node("numClass");
     _noClass = atoi(numClassNode->value());
@@ -215,14 +220,16 @@ void UnarySegmentation::readConfig(){
             _trainValList.assign(value->value());
         else if(string(name->value()).compare("testList")==0)
             _testList.assign(value->value());
-        else if(string(name->value()).compare("featureName")==0)
-            _featureName.assign(value->value());
+        else if(string(name->value()).compare("methodName")==0)
+            _methodName.assign(value->value());
         else if(string(name->value()).compare("gridSizeSuperPixel")==0)
             _gridSizeSP = atoi(value->value());
         else if(string(name->value()).compare("superPixelAddress")==0)
             _superPixelAddress.assign(value->value());
         else if(string(name->value()).compare("usePreSuperPixels")==0)
             _usePreSuperPixels = atoi(value->value());
+        else if(string(name->value()).compare("superPixelExt")==0)
+            _spExt.assign(value->value());
     }
 }
 
@@ -231,7 +238,7 @@ void UnarySegmentation::makeTrainDataset(){
     DRWN_LOG_MESSAGE("Prepairing for making training dataset");
     const string imageListName = string(_baseWorkDir+_trainList);
     makeDataset(imageListName, true);
-    _dataset.write((_baseWorkDir+"unary"+_featureName+"TrainDataset.bin").c_str());
+    _dataset.write((_baseWorkDir+"unary"+_methodName+"TrainDataset.bin").c_str());
 }
 
 void UnarySegmentation::makeTestDataset(){
@@ -239,26 +246,26 @@ void UnarySegmentation::makeTestDataset(){
     DRWN_LOG_MESSAGE("Prepairing for making test dataset");
     const string imageListName = string(_baseWorkDir+_testList);
     makeDataset(imageListName, false);
-    _dataset.write((_baseWorkDir+"unary"+_featureName+"TestDataset.bin").c_str());
+    _dataset.write((_baseWorkDir+"unary"+_methodName+"TestDataset.bin").c_str());
 }
 
 void UnarySegmentation::trainModel(){
     _dataset.clear();
     DRWN_LOG_MESSAGE("Training classifier");
-    _dataset.read((_baseWorkDir+"unary"+_featureName+"TrainDataset.bin").c_str());
+    _dataset.read((_baseWorkDir+"unary"+_methodName+"TrainDataset.bin").c_str());
     int nFeatures = _dataset.numFeatures();
     int nClasses = _dataset.maxTarget() + 1;
     drwnBoostedClassifier model(nFeatures, nClasses);
     model.train(_dataset);
-    model.write((_baseWorkDir+"unary"+_featureName+"TrainedModel.bin").c_str());
+    model.write((_baseWorkDir+"unary"+_methodName+"TrainedModel.bin").c_str());
 }
 
 void UnarySegmentation::testModel(){
     _dataset.clear();
     DRWN_LOG_MESSAGE("test the trained classifier");
-    _dataset.read((_baseWorkDir+"unary"+_featureName+"TestDataset.bin").c_str());
+    _dataset.read((_baseWorkDir+"unary"+_methodName+"TestDataset.bin").c_str());
     drwnBoostedClassifier model;
-    model.read((_baseWorkDir+"unary"+_featureName+"TrainedModel.bin").c_str());
+    model.read((_baseWorkDir+"unary"+_methodName+"TrainedModel.bin").c_str());
     vector<int> predictions;
     model.getClassifications(_dataset.features, predictions);
     double acc = 0;
@@ -302,9 +309,9 @@ void UnarySegmentation::makeDataset(const string &imageListName, bool trainDatas
         if (_usePreSuperPixels==0)
             container.addSuperpixels(drwnFastSuperpixels(img, _gridSizeSP));
         else
-            container.loadSuperpixels((_superPixelAddress+baseNames[cnt]+".bin").c_str());
+            container.loadSuperpixels((_superPixelAddress+baseNames[cnt]+_spExt).c_str());
         vector<vector<double> > features;
-        if(_featureName=="HOG"){
+        if(_methodName=="HOG"){
             HOGFeatures hogFeat;
             hogFeat.computeFeatures(img, features, container);
         }
@@ -335,3 +342,5 @@ void UnarySegmentation::makeDataset(const string &imageListName, bool trainDatas
         }
     }
 }
+
+

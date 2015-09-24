@@ -4,7 +4,10 @@
 #include "drwnVision.h"
 #include "SuperPixelContainer.h"
 #include "HOGFeatures.h"
-
+/// simple class for unary super pixel segmentation
+///
+///
+/// this class will read config and image base names train a simple boosting classifier and test it
 class UnarySegmentation
 {
 public:
@@ -18,8 +21,6 @@ public:
     void trainModel();
     void testModel();
 
-
-
 protected:
     string _imgDir;
     string _lblDir;
@@ -27,6 +28,7 @@ protected:
     string _baseDir;
     string _imgExt;
     string _lblExt;
+    string _spExt;
 
 
     int _noClass;
@@ -43,13 +45,13 @@ protected:
     string _baseWorkDir;
     string _modelName;
 
-    string _featureName;
+    string _methodName;
 
     string _configAddress;
 
     drwnClassifierDataset _dataset;
 
-private:
+protected:
     void loadSuperpixelLabels(MatrixXi &labels,const char *lblFilename, SuperPixelContainer &container, vector<int> &targets);
     void makeDataset(const string &imageListName, bool trainDataset);
 

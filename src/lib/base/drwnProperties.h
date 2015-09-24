@@ -18,7 +18,6 @@
 #include <vector>
 #include <map>
 #include <list>
-
 #include "Eigen/Core"
 #include "drwnSmartPointer.h"
 #include "drwnXMLParser.h"
@@ -41,7 +40,7 @@ class drwnPropertyInterface {
     bool _bReadOnly;   // read-only property
     bool _bSerialize;  // serializeable property
 
-    drwnPropertyInterface() : _bReadOnly(false), _bSerialize(true) { };
+    drwnPropertyInterface() : _bReadOnly(false), _bSerialize(true) { }
     drwnPropertyInterface(bool bReadOnly, bool bSerialize = true) : 
         _bReadOnly(bReadOnly), _bSerialize(bSerialize) { }
 

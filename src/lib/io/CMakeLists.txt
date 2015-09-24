@@ -1,6 +1,8 @@
 project(drwnIO)
 set (SRC_LIST "")
 find_package(ZLIB)
+find_package(Eigen3)
+INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
 aux_source_directory(. SRC_LIST)
 include_directories(${ZLIB_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} ${SRC_LIST})

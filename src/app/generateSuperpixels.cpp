@@ -141,7 +141,6 @@ int main(int argc, char *argv[])
 
     } else if (outFile != NULL) {
         const string ext = drwn::strExtension(string(outFile));
-
         if (ext.compare("txt") == 0) {
             // write as human readable text file
             ofstream ofs(outFile);

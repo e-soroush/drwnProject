@@ -5,6 +5,7 @@
 #include "FeaturesContainer.h"
 #include "HOGFeatures.h"
 #include "UnarySegmentation.h"
+#include "UnarySPSegPCA.h"
 
 string datasets_path = std::getenv("DATASETS_DIR");
 //    string datasets_path = "/home/ebi/Datasets";
@@ -193,7 +194,7 @@ void makeDataset(){
         HOGFeatures hogFeat;
         vector<vector<double> > features;
         hogFeat.computeFeatures(img, features, container);
-        int noSps = container.size();
+//        int noSps = container.size();
         container.loadSuperpixels(lblFilename.c_str());
         MatrixXi labels(img.rows, img.cols);
         drwnLoadPixelLabels(labels, lblFilename.c_str(), numClass);
@@ -300,7 +301,7 @@ void testModel(){
         HOGFeatures hogFeat;
         vector<vector<double> > features;
         hogFeat.computeFeatures(img, features, container);
-        int noSps = container.size();
+//        int noSps = container.size();
         container.loadSuperpixels(lblFilename.c_str());
         MatrixXi labels(img.rows, img.cols);
         drwnLoadPixelLabels(labels, lblFilename.c_str(), numClass);
@@ -353,6 +354,44 @@ void testEModel(){
 
 
 int main(int argc, char * argv[]){
+//    string datasets_path = std::getenv("DATASETS_DIR");
+//    //    string datasets_path = "/home/ebi/Datasets";
+//    const char *baseName = "1_19_s";
+//    cv::Mat img = cv::imread(datasets_path+"/MSRC/Images/" + baseName + ".bmp");
+
+//    drwnSegImageInstance instance(img, baseName);
+//    instance.appendPixelFeatures();
+//    vector<vector<double> > unaries =  instance.unaries;
+    UnarySPSegPCA unarySegmentation("secConfig.xml");
+////    unarySegmentation.initConfigXml();
+    unarySegmentation.readConfig();
+    unarySegmentation.makeTrainDataset();
+    unarySegmentation.trainModel();
+    unarySegmentation.makeTestDataset();
+    unarySegmentation.testModel();
+
+//    drwnClassifierDataset dataset;
+//    dataset.read("/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/unaryPCATrainDataset.bin");
+//    vector<double> features = dataset.features[0];
+//    int target = dataset.targets[0];
+//    vector<drwnBoostedClassifier> unaryModel;
+//    unaryModel.resize(21);
+//    string path = "/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/unaryPCATrainedModel";
+//    for (unsigned cnt = 0; cnt<21; cnt++){
+//        unaryModel[cnt].read((path+to_string(cnt)+".bin").c_str());
+//    }
+//    vector<int> classId;
+//    vector<double> confidence;
+//    for (unsigned cnt = 0; cnt< 21; cnt++){
+//        drwnBoostedClassifier model = unaryModel[cnt];
+//        classId.push_back(model.getClassification(features));
+//        vector<double> confs;
+//        model.getClassScores(features, confs);
+//        confidence.push_back(confs[classId.back()]);
+//    }
+//    cout <<"classId: "<<endl;
+
+
     //    testHOG();
     //    testDataset();
     //    testClassifier();
@@ -361,37 +400,67 @@ int main(int argc, char * argv[]){
     //    makeDataset();
     //    trainModel();
     //    testModel();
-//    testEModel();
-    UnarySegmentation unary;
-    unary.Process();
-    vector<cv::Mat> selected,response, textoneFeatures;
-    vector<vector<double> >features;
-    SuperPixelContainer container;
-    SuperPixelContainer gtContainer;
-    drwnLBPFilterBank lbpFiltBank(true);
-    drwnTextonFilterBank textoneFilter;
-    FeaturesContainer featureContainer;
-    textoneFilter.filter(img,textoneFeatures);
-    container.addSuperpixels(drwnFastSuperpixels(img, 15));
-    vector<int> tSize;
-    for(int cnt = 0; cnt<container.size(); cnt++){
-        set<unsigned> nbrs = container.neighbours(cnt);
-        tSize.push_back(nbrs.size());
-    }
-    int maxTSize = *min_element(tSize.begin(), tSize.end());
-    HOGFeatures hogFeat;
-    hogFeat.computeFeatures(img, features, container);
-    gtContainer.loadSuperpixels("/home/ebi/Datasets/MSRC/labels/1_19_s.txt");
-    cv::imshow("gt",gtContainer.visualize(img,false));
-    waitKey();
-    //    cv::imshow("test", container.selectSuperPixel(20,img, selected));
-    //    container.setMap(selected);
-    lbpFiltBank.filter(img, response);
-    lbpFiltBank.regionFeatures(container, response, features);
-    featureContainer.setFeatures(textoneFeatures, container);
-    //    featureContainer.appendFeatures(textoneFeatures, selected[0]);
-    cv::imshow("test2",container.visualize(img,false));
-    Mat summ = (gtContainer.visualize(Mat(img.size(), img.type(),Scalar::all(0)),false,true) + container.visualize(img,false));
-    imshow("sum", summ);
-    cv::waitKey();
+    //    testEModel();
+    //    UnarySegmentation unary;
+    //    unary.Process();
+    //    drwnFeatureWhitener pixelFeatureWhitener;
+    //    drwnClassifierDataset dataset;
+    //    string base_dir = "/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/";
+    //    string dataset_dir = base_dir+"unaryHOGTrainDataset.bin";
+    //    string model_dir = base_dir + "unaryHOGTrainedModel.bin";
+    //    dataset.read(dataset_dir.c_str());
+    //    int numClasses = dataset.maxTarget()+1;
+    //    int numFeatures = dataset.numFeatures();
+    //    pixelFeatureWhitener.train(dataset.features);
+    //    pixelFeatureWhitener.transform(dataset.features);
+    //    drwnBoostedClassifier model(numFeatures, numClasses);
+    //    drwnConfusionMatrix confusion(numClasses);
+    //    vector<int> predictions;
+    //    model.train(dataset);
+    //    model.getClassifications(dataset.features, predictions);;
+    //    confusion.accumulate(dataset.targets, predictions);
+    //    confusion.write(cout);
+    //    confusion.avgPrecision();
+    //    cout<<"avgPer: " << confusion.avgPrecision()<<endl;
+    //    cout<<"avgRecal: " << confusion.avgRecall()<<endl;
+    //    cout<<"Accuracy: " << confusion.accuracy()<<endl;
+    //    model.read(model_dir.c_str());
+
+    //    vector<cv::Mat> selected,response, textoneFeatures;
+    //    vector<vector<double> >features;
+    //    SuperPixelContainer container;
+    //    SuperPixelContainer gtContainer;
+    //    drwnLBPFilterBank lbpFiltBank(true);
+    //    drwnTextonFilterBank textoneFilter;
+    //    FeaturesContainer featureContainer;
+    //    textoneFilter.filter(img,textoneFeatures);
+    //    container.addSuperpixels(drwnFastSuperpixels(img, 15));
+    //    vector<int> tSize;
+    //    for(int cnt = 0; cnt<container.size(); cnt++){
+    //        set<unsigned> nbrs = container.neighbours(cnt);
+    //        tSize.push_back(nbrs.size());
+    //    }
+    //    int maxTSize = *min_element(tSize.begin(), tSize.end());
+    //    HOGFeatures hogFeat;
+    //    hogFeat.computeFeatures(img, features, container);
+    //    gtContainer.loadSuperpixels("/home/ebi/Datasets/MSRC/labels/1_19_s.txt");
+    //    cv::imshow("gt",gtContainer.visualize(img,false));
+    //    waitKey();
+
+    //    //    cv::imshow("test", container.selectSuperPixel(20,img, selected));
+    //    //    container.setMap(selected);
+    //    lbpFiltBank.filter(img, response);
+    //    lbpFiltBank.regionFeatures(container, response, features);
+    //    featureContainer.setFeatures(textoneFeatures, container);
+    //    //    featureContainer.appendFeatures(textoneFeatures, selected[0]);
+    //    cv::imshow("test2",container.visualize(img,false));
+    //    Mat summ = (gtContainer.visualize(Mat(img.size(), img.type(),Scalar::all(0)),false,true) + container.visualize(img,false));
+    //    imshow("sum", summ);
+    //    cv::waitKey();
+
+
+//    drwnSegImageInstance instance(img);
+//    drwnSegImageStdPixelFeatures stdPixelFeatures;
+//    stdPixelFeatures.cacheInstanceData(instance);
+//    cout<< "numFeat:" << stdPixelFeatures.numFeatures()<<endl;
 }

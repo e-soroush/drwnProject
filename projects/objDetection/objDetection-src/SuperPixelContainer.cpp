@@ -98,3 +98,47 @@ void SuperPixelContainer::gTruthSuperPixel(vector<vector<int> > &segIds, const M
         }
     }
 }
+
+void SuperPixelContainer::getPixelsByID(int channel, int id, vector<Point> &pixels){
+    pixels.clear();
+    pixels.resize(0);
+    for(int i=0; i<channel; i++)
+        id+=cSize(channel-1)+1;
+//    id = channel == 0 ? id : id+cSize(channel-1)+1;
+    for(unsigned row = 0; row<_maps[channel].rows; row++){
+        const int* p = _maps[channel].ptr<int>(row);
+        for(unsigned col = 0; col<_maps[channel].cols; col++){
+            if(p[col]!=id) continue;
+            pixels.push_back(Point(col, row));
+        }
+    }
+}
+
+int SuperPixelContainer::cSize(int channel){
+    double minV, maxV;
+    Point minL, maxL;
+    minMaxLoc(_maps[channel], &minV, &maxV, &minL, &maxL);
+    for(int i = 0; i<channel; i++){
+        maxV -= cSize(i);
+    }
+    return maxV+1;
+}
+
+
+bool SuperPixelContainer::setSegId(const vector<int> &segId, int channel){
+    if(segId.size() == cSize(channel)){
+        _segId = segId;
+        return true;
+    }
+    else
+        return false;
+}
+
+bool SuperPixelContainer::getSegId(vector<int> &segId, int channel){
+    if(_segId.size() == cSize(channel)){
+        segId = _segId;
+        return true;
+    }
+    else
+        return false;
+}

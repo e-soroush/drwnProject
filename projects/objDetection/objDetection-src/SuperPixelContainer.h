@@ -17,6 +17,15 @@ public:
     int getSuperPixelId(int x, int y);
     void gTruthSuperPixel(vector<vector<int> > &segIds, const MatrixXi &labels);
     cv::Mat visualize(const cv::Mat& img, bool bColorById, bool gTruth=false) const;
+    /// return points that given super pixel have
+    void getPixelsByID(int channel, int id, vector<Point> &pixels);
+    /// return number of super pixels for given channel
+    int cSize(int channel);
+    bool setSegId(const vector<int> &segId, int channel);
+    bool getSegId(vector<int> &segId, int channel);
+
+private:
+    vector<int> _segId;
 
 
 };
