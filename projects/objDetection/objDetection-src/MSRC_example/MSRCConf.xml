@@ -1,0 +1,48 @@
+<MSRC_Config>
+	<Addressing_informations>
+		<option name="baseDir" value="/home/ebi/Datasets/MSRC/"/>
+		<option name="imageDir" value="Images/"/>
+		<option name="labelDir" value="labels/"/>
+		<option name="groundTruthDir" value="GroundTruth/"/>
+		<option name="imgExt" value=".bmp"/>
+		<option name="lblExt" value=".txt"/>
+		<option name="groundTruthExt" value="_GT.bmp"/>
+		<option name="outputDir" value="output/"/>
+	</Addressing_informations>
+	<Region_Informarion>
+		<region id="-1" name="void" color="0 0 0"/>
+		<region id="0" name="building" color="128 0 0"/>
+		<region id="1" name="grass" color="0 128 0"/>
+		<region id="2" name="tree" color="128 128 0"/>
+		<region id="3" name="cow" color="0 0 128"/>
+		<region id="4" name="sheep" color="0 128 128"/>
+		<region id="5" name="sky" color="128 128 128"/>
+		<region id="6" name="airplane" color="192 0 0"/>
+		<region id="7" name="water" color="64 128 0"/>
+		<region id="8" name="face" color="192 128 0"/>
+		<region id="9" name="car" color="64 0 128"/>
+		<region id="10" name="bicycle" color="192 0 128"/>
+		<region id="11" name="flower" color="64 128 128"/>
+		<region id="12" name="sign" color="192 128 128"/>
+		<region id="13" name="bird" color="0 64 0"/>
+		<region id="14" name="book" color="128 64 0"/>
+		<region id="15" name="chair" color="0 192 0"/>
+		<region id="16" name="road" color="128 64 128"/>
+		<region id="17" name="cat" color="0 192 128"/>
+		<region id="18" name="dog" color="128 192 128"/>
+		<region id="19" name="body" color="64 64 0"/>
+		<region id="20" name="boat" color="192 64 0"/>
+	</Region_Informarion>
+	<numClass>21</numClass>
+	<Train_Information>
+		<option name="baseDir" value="/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/"/>
+		<option name="trainList" value="trainList.txt"/>
+		<option name="trainValList" value="trainValList.txt"/>
+		<option name="testList" value="testList.txt"/>
+		<option name="superPixelAddress" value="/home/ebi/Datasets/MSRC/regions/"/>
+		<option name="usePreSuperPixels" value="0"/>
+		<option name="featureName" value="HOG"/>
+		<option name="gridSizeSuperPixel" value="15"/>
+	</Train_Information>
+</MSRC_Config>
+
