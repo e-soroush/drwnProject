@@ -8,6 +8,7 @@ public:
     UnarySPSegPCA();
     UnarySPSegPCA(const string &confAddress);
     ~UnarySPSegPCA();
+    void Process();
     void makeTrainDataset();
     void makeTestDataset();
     void trainModel();

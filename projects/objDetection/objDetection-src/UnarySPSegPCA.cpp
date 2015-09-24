@@ -14,6 +14,19 @@ UnarySPSegPCA::~UnarySPSegPCA()
 
 }
 
+void UnarySPSegPCA::Process(){
+    if(!drwnFileExists(_configAddress.c_str()))
+        initConfigXml();
+    readConfig();
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TrainDataset.bin").c_str()))
+        makeTrainDataset();
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TestDataset.bin").c_str()))
+        makeTestDataset();
+    if(!drwnFileExists((_baseWorkDir+"unary"+_methodName+"TrainedModel0.bin").c_str()))
+        trainModel();
+    testModel();
+}
+
 void UnarySPSegPCA::makeTrainDataset(){
     _dataset.clear();
     DRWN_LOG_MESSAGE("Prepairing for making training dataset");
@@ -38,6 +51,7 @@ void UnarySPSegPCA::trainModel(){
     int nClasses = _dataset.maxTarget() + 1;
     vector<drwnBoostedClassifier*> unaryModel(nClasses);
     for(unsigned cnt = 0; cnt<nClasses; cnt++){
+        DRWN_LOG_MESSAGE("Training classifier for class" << cnt);
         drwnClassifierDataset tmpDataset;
         for(unsigned ins = 0; ins<_dataset.targets.size(); ins++){
             int target = _dataset.targets[ins] == cnt ? 1 : 0;
@@ -80,6 +94,16 @@ void UnarySPSegPCA::testModel(){
             if(classId[sel]==1 && confidence[sel]>maxConf){
                 classID = sel;
                 maxConf = confidence[sel];
+            }
+        }
+        if(classID == -1){
+            double minConf = 100;
+            for(unsigned i = 0; i<confidence.size(); i++){
+                if (confidence[i]<minConf){
+                    classID = i;
+                    minConf = confidence[i];
+                }
+
             }
         }
         if (_dataset.targets[cnt]==-1){continue;}
@@ -148,7 +172,7 @@ void UnarySPSegPCA::makeDataset(const string &imageListName, bool trainDataset){
             }
             _dataset.append(features, maxId);
         }
-        int base10 = baseNames.size()/1;
+        int base10 = baseNames.size()/10;
         processed++;
         if((processed%base10)==0)
             DRWN_LOG_MESSAGE("Processed: "<<(float)processed/(float)baseNames.size() * 100<<" %");

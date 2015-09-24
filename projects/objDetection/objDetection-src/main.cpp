@@ -7,8 +7,8 @@
 #include "UnarySegmentation.h"
 #include "UnarySPSegPCA.h"
 
-string datasets_path = std::getenv("DATASETS_DIR");
-//    string datasets_path = "/home/ebi/Datasets";
+//string datasets_path = std::getenv("DATASETS_DIR");
+    string datasets_path = "/home/soroush/Datasets";
 cv::Mat img = cv::imread(datasets_path+"/MSRC/Images/1_19_s.bmp");
 
 void testHOG(){
@@ -363,12 +363,13 @@ int main(int argc, char * argv[]){
 //    instance.appendPixelFeatures();
 //    vector<vector<double> > unaries =  instance.unaries;
     UnarySPSegPCA unarySegmentation("secConfig.xml");
-////    unarySegmentation.initConfigXml();
-    unarySegmentation.readConfig();
-    unarySegmentation.makeTrainDataset();
-    unarySegmentation.trainModel();
-    unarySegmentation.makeTestDataset();
-    unarySegmentation.testModel();
+    unarySegmentation.Process();
+//    unarySegmentation.initConfigXml();
+//    unarySegmentation.readConfig();
+//    unarySegmentation.makeTrainDataset();
+//    unarySegmentation.trainModel();
+//    unarySegmentation.makeTestDataset();
+//    unarySegmentation.testModel();
 
 //    drwnClassifierDataset dataset;
 //    dataset.read("/home/ebi/Projects/darwin/projects/objDetection/objDetection-src/MSRC_example/unaryPCATrainDataset.bin");

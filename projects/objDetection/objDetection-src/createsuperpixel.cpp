@@ -5,7 +5,7 @@
 // create super pixel and save it to a directory
 int main(int argc, char * argv[]){
     // base path
-    const string pathBase = "/home/ebi/Datasets/MSRC/";
+    const string pathBase = "/home/soroush/Datasets/MSRC/";
     // path for super pixels stored
     const string pathRegionBase = pathBase + "Regions/";
     // path for images stored
@@ -49,6 +49,6 @@ int main(int argc, char * argv[]){
         container.write(ofs);
         ofs.close();
         if((++processed)%((int)baseNames.size()/10)==0)
-            DRWN_LOG_MESSAGE(processed/gridSizes.size()*100<<" processed.");
+            DRWN_LOG_MESSAGE(processed/baseNames.size()*100<<" processed.");
     }
 }

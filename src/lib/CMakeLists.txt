@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(drwnLibs)
-if (DEFINED $ENV{DRWN_DIR})
+if (DEFINED ENV{DRWN_DIR})
     set(DRWN_DIR $ENV{DRWN_DIR})
 else()
     set(DRWN_DIR /home/ebi/Projects/darwin)
